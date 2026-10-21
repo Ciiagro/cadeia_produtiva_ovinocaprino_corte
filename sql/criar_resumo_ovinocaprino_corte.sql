@@ -8,8 +8,9 @@
 --   public.resumo_ovino_despesa_subgrupo    -> despesa direta por subgrupo e mês (a soma dos subgrupos = despesa direta).
 -- Regras do corte (mesmo raciocínio da bovinocultura; CONFERIR com o relatório do SisATeG de um técnico):
 --   valor do lançamento = QUANTIDADE x VALOR_UNITARIO (mesma visita e mesmo item)
---   venda_animais_rs  = receita dos subgrupos "Venda de Animal Vivo" e "Venda de Animal Abate"
+--   venda_animais_rs  = receita do subgrupo "Venda de Animal Vivo" (abate fica fora, como na planilha)
 --   animais_vendidos  = quantidade (cabeças) desses mesmos subgrupos
+--   (venda de animal para abate fica FORA da receita bruta, como na planilha do SisATeG; guardada em venda_abate_rs)
 --   receita_bruta     = venda de animais, esterco, volumoso excedente, pele, lã e outras receitas;
 --                       NÃO conta empréstimo (recebimento) nem investimento (venda de bem)
 --   despesa_direta    = despesas menos empréstimo, investimento (aquisição de bem), "Aleitamento artificial",
@@ -130,11 +131,13 @@ tec_mes AS (  -- técnico responsável pela visita daquele mês (técnico da ép
 fin AS (
   SELECT id_propriedade, mes,
     SUM(qtd) FILTER (WHERE grupo = 'Receita'
-         AND (subgrupo ILIKE 'Venda de Animal Vivo%' OR subgrupo ILIKE 'Venda de Animal Abate%')) AS animais_vendidos,
+         AND subgrupo ILIKE 'Venda de Animal Vivo%') AS animais_vendidos,
     SUM(valor) FILTER (WHERE grupo = 'Receita'
-         AND (subgrupo ILIKE 'Venda de Animal Vivo%' OR subgrupo ILIKE 'Venda de Animal Abate%')) AS venda_animais_rs,
+         AND subgrupo ILIKE 'Venda de Animal Vivo%') AS venda_animais_rs,
     SUM(valor) FILTER (WHERE grupo = 'Receita'
-         AND subgrupo NOT ILIKE 'Empr%' AND subgrupo NOT ILIKE 'Investimento%') AS receita_bruta,
+         AND subgrupo NOT ILIKE 'Empr%' AND subgrupo NOT ILIKE 'Investimento%'
+         AND subgrupo NOT ILIKE 'Venda de Animal Abate%') AS receita_bruta,
+    SUM(valor) FILTER (WHERE grupo = 'Receita' AND subgrupo ILIKE 'Venda de Animal Abate%') AS venda_abate_rs,
     SUM(valor) FILTER (WHERE grupo = 'Despesa'
          AND subgrupo NOT ILIKE 'Empr%' AND subgrupo NOT ILIKE 'Investimento%') AS despesa_total,
     SUM(valor) FILTER (WHERE grupo = 'Despesa'
@@ -152,6 +155,7 @@ SELECT f.id_propriedade,
        ROUND(f.animais_vendidos::numeric, 1)     AS animais_vendidos,
        ROUND(f.venda_animais_rs::numeric, 2)     AS venda_animais_rs,
        ROUND(f.receita_bruta::numeric, 2)        AS receita_bruta,
+       ROUND(f.venda_abate_rs::numeric, 2)       AS venda_abate_rs,
        ROUND(f.despesa_direta::numeric, 2)       AS despesa_direta,
        ROUND(f.mao_obra_familiar::numeric, 2)    AS mao_obra_familiar,
        ROUND(f.despesa_aleitamento::numeric, 2)  AS despesa_aleitamento,
@@ -215,7 +219,8 @@ pr AS (
 ),
 v AS (
   SELECT q.id_propriedade, to_char(date_trunc('month', q.dt_referencia), 'YYYY-MM') AS mes, q.grupo, q.subgrupo,
-         CASE WHEN q.subgrupo ILIKE 'Empr%' OR q.subgrupo ILIKE 'Investimento%' THEN
+         CASE WHEN q.grupo = 'Receita' AND q.subgrupo ILIKE 'Venda de Animal Abate%' THEN 'Fora da receita bruta'
+              WHEN q.subgrupo ILIKE 'Empr%' OR q.subgrupo ILIKE 'Investimento%' THEN
                 CASE WHEN q.grupo = 'Receita' THEN 'Fora da receita bruta' ELSE 'Fora das despesas' END
               WHEN q.grupo = 'Receita' THEN 'Receita bruta'
               WHEN q.subgrupo ILIKE 'Aleitamento%' OR q.subgrupo ILIKE 'Despesas com Forma%'
