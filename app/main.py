@@ -425,10 +425,11 @@ def tipos(supervisor: str | None = None, tecnico: str | None = None, propriedade
         return {"total": tot, "itens": l}
     rb, rf = lista("Receita bruta"), lista("Fora da receita bruta")
     dd, od, df = lista("Despesa direta"), lista("Outras despesas"), lista("Fora das despesas")
+    da = lista("Aleitamento (fora do total)")
     desp_total = dd["total"] + od["total"] + df["total"]   # total geral (igual ao "Total Despesas" do SisATeG): inclui investimento e pagamento de empréstimo
     rec_total = rb["total"] + rf["total"]                   # total geral de receitas (inclui venda de bem e recebimento de empréstimo)
     return {"de": ms["a"] if ms else None, "ate": ms["b"] if ms else None,
-            "receita_bruta": rb, "receita_fora": rf, "despesa_direta": dd, "despesa_outras": od, "despesa_fora": df,
+            "receita_bruta": rb, "receita_fora": rf, "despesa_direta": dd, "despesa_outras": od, "despesa_fora": df, "despesa_aleitamento": da,
             "despesa_total": desp_total, "receita_total": rec_total, "margem_bruta": rb["total"] - dd["total"]}
 
 

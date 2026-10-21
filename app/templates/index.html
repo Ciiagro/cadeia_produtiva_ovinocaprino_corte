@@ -518,9 +518,10 @@ async function carregaTipos(q){
     <div class="d-bloco" style="margin-bottom:14px"><h3>Resumo do período</h3>
       ${kpi('Receita bruta total', d.receita_bruta.total, 'pos')}
       ${kpi('Despesa direta', d.despesa_direta.total, 'neg')}
-      ${kpi('Outras despesas (mão de obra, aleitamento, formação...)', d.despesa_outras.total)}
+      ${kpi('Outras despesas (mão de obra familiar, formação...)', d.despesa_outras.total)}
       ${kpi('Investimento e pagamento de empréstimo', d.despesa_fora.total)}
-      ${kpi('Total de despesas (soma de tudo)', d.despesa_total, 'neg')}
+      ${kpi('Total de despesas (direta + outras + investimento)', d.despesa_total, 'neg')}
+      ${kpi('Aleitamento artificial (fora do total, só informativo)', d.despesa_aleitamento.total)}
       ${kpi('Margem bruta (receita bruta − despesa direta)', d.margem_bruta, d.margem_bruta >= 0 ? 'pos' : 'neg')}
     </div>
     <h3 class="c-tit">Receita bruta por tipo</h3>
@@ -528,7 +529,9 @@ async function carregaTipos(q){
     <h3 class="c-tit">Despesa direta por tipo</h3>
     <p class="d-resumo">As despesas que entram no cálculo da margem bruta.</p>${tab(d.despesa_direta)}
     <h3 class="c-tit">Outras despesas (não entram na despesa direta)</h3>
-    <p class="d-resumo">Mão de obra familiar, aleitamento, formação de forrageiras e compra de animal lançada como investimento. Somadas à despesa direta (e ao investimento) formam o <b>total de despesas</b>.</p>${tab(d.despesa_outras)}
+    <p class="d-resumo">Mão de obra familiar, formação de forrageiras e compra de animal lançada como investimento. Somadas à despesa direta (e ao investimento) formam o <b>total de despesas</b>.</p>${tab(d.despesa_outras)}
+    <h3 class="c-tit">Aleitamento artificial (fora do total de despesas)</h3>
+    <p class="d-resumo">Gasto real, mostrado aqui para consulta, mas <b>não somado</b> ao total de despesas para o painel bater com a planilha do SisATeG.</p>${tab(d.despesa_aleitamento, 'Sem aleitamento no período.')}
     <h3 class="c-tit">Investimento e empréstimo</h3>
     <p class="d-resumo">Não entram na despesa direta nem na receita bruta (margem), mas a <b>soma de todas as despesas</b> inclui o investimento e o pagamento de empréstimo, como no Total Despesas do SisATeG. Total geral de receitas (com venda para abate, venda de bem e recebimento de empréstimo): <b>${brl2(d.receita_total)}</b>.</p>
     <div class="d-grid"><div class="d-bloco"><h3>Despesas: investimento e pagamento de empréstimo</h3>${tab(d.despesa_fora)}</div><div class="d-bloco"><h3>Receitas fora da receita bruta: venda de animal para abate, venda de bem e recebimento de empréstimo</h3>${tab(d.receita_fora)}</div></div>`;

@@ -223,7 +223,8 @@ v AS (
               WHEN q.subgrupo ILIKE 'Empr%' OR q.subgrupo ILIKE 'Investimento%' THEN
                 CASE WHEN q.grupo = 'Receita' THEN 'Fora da receita bruta' ELSE 'Fora das despesas' END
               WHEN q.grupo = 'Receita' THEN 'Receita bruta'
-              WHEN q.subgrupo ILIKE 'Aleitamento%' OR q.subgrupo ILIKE 'Despesas com Forma%'
+              WHEN q.grupo = 'Despesa' AND q.subgrupo ILIKE 'Aleitamento%' THEN 'Aleitamento (fora do total)'
+              WHEN q.subgrupo ILIKE 'Despesas com Forma%'
                    OR q.item ILIKE 'M_o de obra familiar'
                    OR q.item ILIKE 'Aquisi%de animais (investimento)%' OR q.item ILIKE 'Aquisi%de animais de servi%' THEN 'Outras despesas'
               ELSE 'Despesa direta' END AS classe,
