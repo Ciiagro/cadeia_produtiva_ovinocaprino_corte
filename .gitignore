@@ -7,3 +7,6 @@ bloco.txt
 _referencia_bovino/
 notas.txt
 COLAR_NO_VERCEL.txt
+
+*.bak_*
+*.bak

@@ -7,7 +7,7 @@ Não mexe nas views da bovinocultura (nomes próprios).
 ## O que o painel mostra
 Receita bruta, despesa direta, venda de animais, preço médio por animal, animais vendidos (cabeças),
 margem bruta da atividade, margem da venda de animais e animais vendidos por produtor.
-Abas: Gráficos, Destaques do mês, Causas (entradas/saídas, preço por animal, despesa por subgrupo) e Tabela mensal (+ Excel).
+Abas: Visão macro, Gráficos, Destaques do mês, Causas, Receitas e despesas, Tabela mensal (+ Excel) e Conferência com a planilha do SisATeG. Filtro de Região, e o projeto TREINAMENTO SP nunca aparece.
 
 ## Regras do corte (conferir com o SisATeG de um técnico)
 - Valor do lançamento = QUANTIDADE x VALOR_UNITARIO. Atividade OVINOCAPRINOCULTURA DE CORTE, status ATIVO, tipo PRINCIPAL.
@@ -20,10 +20,7 @@ Abas: Gráficos, Destaques do mês, Causas (entradas/saídas, preço por animal,
 - O painel começa em jun/2024 (`MES_INICIO` no SQL e no app; o corte tem dados desde 2020).
 
 ## Rotina
-1. Rodar a rotina da bovinocultura (passos 1 a 3 do ROTINA_DIARIA.md): a tabela `sisateg_receita_despesa` é a mesma.
-2. Rodar `sql/criar_resumo_ovinocaprino_corte.sql` no banco local `api_sisateg` (pgAdmin).
-3. `python scripts/transferir_resumo.py` (copia as 3 tabelas resumo_ovino_* e recria as views vw_ovino_*).
-4. Abrir o painel e apertar Ctrl+F5.
+Veja `PASSO_A_PASSO_ATUALIZACAO.md`. Resumo: todo dia `python scripts/atualizar_tudo.py --rapido` (ou `atualizar_ovino.bat`); o painel lê o banco do servidor, então só precisa de `git push` quando o código mudar.
 
 ## Primeira publicação (uma vez)
 - Copiar o `.env` da bovinocultura para esta pasta (sem TABLE_NAME; veja .env.example).
