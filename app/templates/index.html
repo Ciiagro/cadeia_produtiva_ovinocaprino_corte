@@ -85,10 +85,12 @@
   .atividade svg{width:46px;height:46px}
   @media(max-width:700px){.atividade{font-size:20px;padding:8px 14px;margin:0} .atividade svg{width:30px;height:30px}}
   /* menu com fundo destacado */
-  .abas{background:#ecdccb;border-color:#ecdccb}
-  .aba{background:#fff}
-  .aba:focus{outline:none} .aba:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
-  .aba.on{box-shadow:0 5px 14px rgba(90,53,25,.45);transform:translateY(-1px)}
+  /* menu em marrom escuro (mesma cor do cabeçalho) para não se confundir com o fundo da página; aba ativa em branco com filete dourado */
+  .abas{background:linear-gradient(90deg,var(--verde-esc),var(--verde));border-color:var(--verde-esc);box-shadow:0 4px 14px rgba(90,53,25,.35)}
+  .aba{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.22)}
+  .aba:hover{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.55)}
+  .aba:focus{outline:none} .aba:focus-visible{outline:2px solid #f0b429;outline-offset:2px}
+  .aba.on{background:#fff;color:var(--verde-esc);border-color:#f0b429;box-shadow:0 5px 14px rgba(0,0,0,.30);transform:translateY(-1px)}
   .destaques{background:var(--surf);border:1px solid var(--linha);border-left:5px solid var(--verde);border-radius:12px;padding:16px 18px;margin-bottom:18px}
   .destaques h2{margin:0 0 6px;font-size:17px;font-weight:700}
   .d-resumo{margin:0 0 12px;font-size:14.5px;line-height:1.55}
@@ -219,6 +221,7 @@
     <button type="button" role="tab" class="aba" data-aba="destaques" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>Destaques do mês</button>
     <button type="button" role="tab" class="aba" data-aba="causas" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Causas</button>
     <button type="button" role="tab" class="aba" data-aba="tipos" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Receitas e despesas</button>
+    <button type="button" role="tab" class="aba" data-aba="revisar" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>Revisar lançamentos</button>
     <button type="button" role="tab" class="aba" data-aba="tabela" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>Tabela mensal</button>
     <button type="button" role="tab" class="aba" data-aba="conf" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Conferência</button>
   </nav>
@@ -248,6 +251,7 @@
   <section class="destaques" id="causas" hidden></section>
   <section class="destaques" id="causas" hidden></section>
   <section class="destaques" id="tipos" hidden></section>
+  <section class="destaques" id="revisar" hidden></section>
   <div class="graficos" id="aba-graficos">
     <section class="graf" style="--cor:var(--c-receita)"><div class="g-topo"><span class="ico g" data-ico="moedas"></span><div class="g-tit"><h2>Receita bruta (R$)</h2><p class="formula">Tudo que entrou na atividade, sem empréstimo nem investimento</p></div><div class="pill" id="pl-c1"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c1"></canvas></div></section>
     <section class="graf" style="--cor:var(--c-desp)"><div class="g-topo"><span class="ico g" data-ico="calc"></span><div class="g-tit"><h2>Despesa direta (R$)</h2><p class="formula">Gastos diretos da atividade, sem empréstimo, investimento, aleitamento e mão de obra familiar</p></div><div class="pill" id="pl-c7"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c7"></canvas></div></section>
@@ -414,6 +418,7 @@ function carregaPendentes(nome){
   else if (nome === 'destaques') carregaDestaques(q, parcial);
   else if (nome === 'causas') carregaCausas(q);
   else if (nome === 'tipos') carregaTipos(q);
+  else if (nome === 'revisar') carregaRevisar(q);
 }
 async function atualiza(){
   const q = new URLSearchParams({projeto:$('proj').value, supervisor:$('sup').value, tecnico:$('tec').value, propriedade:$('prop').value, municipio:$('mun').value, regiao:$('reg').value, situacao:$('sit').value, de:$('de').value, ate:$('ate').value});
@@ -453,7 +458,7 @@ async function atualiza(){
   ].join('') : '<p>Sem dados para o filtro.</p>';
   // Abas pesadas (macro, destaques, causas, tipos): só consultam o banco quando a aba está aberta.
   // As outras ficam pendentes e carregam no primeiro clique, já com os filtros atuais.
-  cargaAba = {q, parcial, pendentes: new Set(['macro', 'destaques', 'causas', 'tipos'])};
+  cargaAba = {q, parcial, pendentes: new Set(['macro', 'destaques', 'causas', 'tipos', 'revisar'])};
   carregaPendentes(abaAtual);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const soma = f => d.reduce((a,x)=>a+(+x[f]||0),0), media = f => { const v = d.map(x=>x[f]).filter(z=>z!=null); return v.length ? v.reduce((a,z)=>a+z,0)/v.length : null; };
@@ -598,6 +603,32 @@ async function carregaTipos(q){
     <h3 class="c-tit">Investimento e empréstimo</h3>
     <p class="d-resumo">Não entram na despesa direta nem na receita bruta (margem), mas a <b>soma de todas as despesas</b> inclui o investimento e o pagamento de empréstimo, como no Total Despesas do SisATeG. Total geral de receitas (com venda para abate, venda de bem e recebimento de empréstimo): <b>${brl2(d.receita_total)}</b>.</p>
     <div class="d-grid"><div class="d-bloco"><h3>Despesas: investimento e pagamento de empréstimo</h3>${tab(d.despesa_fora)}</div><div class="d-bloco"><h3>Receitas fora da receita bruta: venda de animal para abate, venda de bem e recebimento de empréstimo</h3>${tab(d.receita_fora)}</div></div>`;
+}
+// ---- Aba "Revisar lançamentos": lançamentos que parecem errados na origem (SisATeG), com os filtros do painel; baixa em Excel
+let revisarAtual = [];
+async function carregaRevisar(q){
+  const box = $('revisar');
+  let d = {};
+  try { d = await (await fetch('/api/revisar?' + q)).json(); } catch(e) { d = {aviso: 'Não consegui ler a lista: ' + e}; }
+  const it = d.itens || [], esc = x => String(x ?? '').replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+  const aviso = d.aviso ? `<p class="d-vazio">⚠ ${esc(d.aviso)}</p>` : '';
+  revisarAtual = it;
+  if (!it.length) { box.innerHTML = `<h2>Lançamentos para revisar</h2>${aviso}<p class="d-vazio">Nenhum lançamento para revisar no período e nos filtros escolhidos.</p>`; return; }
+  const tot = it.reduce((s, x) => s + (+x.valor || 0), 0);
+  box.innerHTML = `<div class="d-topo"><h2>Lançamentos para revisar: ${esc($('de').value)} a ${esc($('ate').value)}</h2><button class="btn sec" id="btnRev" type="button">Baixar Excel</button></div>
+    <p class="d-resumo"><b>${nf.format(it.length)}</b> lançamento(s) somando <b>${brl2(tot)}</b>. São lançamentos que parecem errados na origem (SisATeG): peça ao técnico para corrigir na visita indicada. Depois da correção e da próxima atualização, eles saem desta lista.</p>${aviso}
+    <div class="rolagem" style="max-height:520px"><table class="t-simples"><thead><tr><th>Supervisor</th><th>Técnico</th><th>Propriedade</th><th>Município</th><th>Mês</th><th>ID Visita</th><th>Subgrupo lançado</th><th>Item</th><th class="n">Qtd</th><th class="n">Valor unit.</th><th class="n">Total</th><th>O que revisar</th></tr></thead><tbody>` +
+    it.map(x => `<tr><td>${esc(x.supervisor) || '<i>sem supervisor</i>'}</td><td>${esc(x.tecnico) || '<i>sem técnico</i>'}</td><td>${esc(x.propriedade)} (${esc(x.id_propriedade)})</td><td>${esc(x.municipio)}</td><td>${esc(x.mes)}</td><td>${esc(x.id_visita)}</td><td>${esc(x.subgrupo)}</td><td>${esc(x.item)}</td><td class="n">${nf.format(x.quantidade ?? 0)}</td><td class="n">${brl2(x.valor_unitario ?? 0)}</td><td class="n">${brl2(x.valor ?? 0)}</td><td>${esc(x.motivo)}</td></tr>`).join('') +
+    `</tbody></table></div>`;
+  $('btnRev').onclick = () => {
+    if (!window.XLSX) { alert('Não foi possível carregar o gerador de Excel. Verifique a internet e tente de novo.'); return; }
+    const cab = ['Supervisor', 'Técnico', 'ID Propriedade', 'Propriedade', 'Município', 'Projeto', 'Mês', 'ID Visita', 'Subgrupo lançado', 'Item', 'Quantidade', 'Valor unitário (R$)', 'Total (R$)', 'O que revisar'];
+    const linhas = revisarAtual.map(x => [x.supervisor ?? '', x.tecnico ?? '', x.id_propriedade, x.propriedade, x.municipio, x.projeto, x.mes, x.id_visita, x.subgrupo, x.item, x.quantidade, x.valor_unitario, x.valor, x.motivo]);
+    const ws = XLSX.utils.aoa_to_sheet([cab, ...linhas]);
+    ws['!cols'] = cab.map((t, i) => ({wch: [24, 30, 14, 30, 18, 20, 9, 12, 22, 14, 11, 16, 12, 70][i]}));
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Revisar lançamentos');
+    XLSX.writeFile(wb, `lancamentos_para_revisar_${$('de').value}_a_${$('ate').value}.xlsx`);
+  };
 }
 // ---- Aba "Visão macro": propriedades, visitas, receita e produção, comparando regiões (ou municípios de uma região) no tempo
 let macroDados = null, macroSort = {k: 'recAno', d: -1};
@@ -822,7 +853,9 @@ async function conferePlanilha(file){
       if (!p) { (Math.abs(l.rec) + Math.abs(l.desp) + Math.abs(l.prod) <= 1 ? soZero : soArq).push(l); return; }   // visita sem nenhum lançamento: o painel não mostra (esperado)
       const o = grupo.get(p) || {p, rec: 0, desp: 0, prod: 0, visitas: [], propriedade: l.propriedade, municipio: l.municipio, id: l.id};
       o.rec += l.rec; o.desp += l.desp; o.prod += l.prod; o.visitas.push(l.visita); grupo.set(p, o); });
-    const P = P0.filter(p => $('confSit').value === 'todas' || p.ativa || grupo.has(p));   // a planilha só traz propriedades ativas; "Ativas e inativas" mostra também as inativas do painel
+    // propriedade que só tem mão de obra familiar (sem receita, sem despesa direta, sem animais) e não está na planilha: não é lançamento de corte relevante
+    const soFam = P0.filter(p => !grupo.has(p) && (p.fam || 0) > 0 && Math.abs(p.recC) + Math.abs(p.desp - (compFam ? p.fam : 0)) + Math.abs(p.prod) <= 1);
+    const P = P0.filter(p => !soFam.includes(p) && ($('confSit').value === 'todas' || p.ativa || grupo.has(p)));   // a planilha só traz propriedades ativas; "Ativas e inativas" mostra também as inativas do painel
     const A = linhas, dif = [], soPan = P.filter(p => !grupo.has(p));
     grupo.forEach(o => { const dr = o.p.recC - o.rec, dd = o.p.desp - o.desp, dp = o.p.prod - o.prod;
       if (Math.abs(dr) > 1 || Math.abs(dd) > 1 || (temProd && Math.abs(dp) > 1)) dif.push({a: o, p: o.p, dr, dd, dp}); });
@@ -843,7 +876,7 @@ async function conferePlanilha(file){
         ${cnt('Na planilha', A.length)}${cnt('No painel (propriedades neste mês)', P.length)}${cnt('Com valor diferente', dif.length, dif.length ? 'neg' : 'pos')}
         ${cnt('Só na planilha (faltam no painel)', soArq.length, soArq.length ? 'neg' : 'pos')}${soZero.length ? cnt('Visitas sem lançamento de corte (esperado, não entram no painel)', soZero.length, '') : ''}${cnt('Só no painel (não estão na planilha)', soPan.length, soPan.length ? 'neg' : 'pos')}</div>
       ${soArq.length ? `<details class="mini" open><summary>Só na planilha</summary><p>${lst(soArq, nomeA)}</p></details>` : ''}${soZero.length ? `<details class="mini"><summary>Visitas sem lançamento (valores zerados na planilha)</summary><p>${lst(soZero, nomeA)}</p></details>` : ''}
-      ${soPan.length ? `<details class="mini"><summary>Só no painel</summary><p>${lst(soPan, nomeP)}</p></details>` : ''}
+      ${soPan.length ? `<details class="mini"><summary>Só no painel</summary><p>${lst(soPan, nomeP)}</p></details>` : ''}${soFam.length ? `<details class="mini"><summary>Só mão de obra familiar (${soFam.length}) — fora da conferência</summary><p>Sem receita e sem despesa direta; a planilha não traz essas propriedades: ${lst(soFam, nomeP)}</p></details>` : ''}
       ${dif.length ? `<h3 class="c-tit">Visitas com valor diferente (maiores diferenças primeiro)</h3>${tabDif}<p><button type="button" id="confBaixa" class="btn">Baixar todas as diferenças (.xlsx)</button></p>` : ''}`;
     const bt = $('confBaixa');
     if (bt) bt.onclick = () => { const ws = XLSX.utils.json_to_sheet(dif.map(x => ({'ID Visita': x.a.visitas.join(', '), 'ID Propriedade': x.a.id, 'Propriedade': x.a.propriedade, 'Município': x.a.municipio, 'Receita planilha': x.a.rec, 'Receita painel': x.p.recC, 'Δ receita': x.dr, 'Despesa planilha': x.a.desp, 'Despesa painel': x.p.desp, 'Δ despesa': x.dd, 'Produção planilha': x.a.prod, 'Produção painel': x.p.prod, 'Δ produção': x.dp})).concat(soArq.map(x => ({'ID Visita': x.visita, 'ID Propriedade': x.id, 'Propriedade': x.propriedade, 'Município': x.municipio, 'Receita planilha': x.rec, 'Despesa planilha': x.desp, 'Produção planilha': x.prod, 'Observação': 'só na planilha'}))));
@@ -854,7 +887,7 @@ let confArquivo = null;
 $('confArq').onchange = ev => { confArquivo = ev.target.files[0]; if (confArquivo) conferePlanilha(confArquivo); };
 $('confSit').onchange = () => { if (confArquivo) conferePlanilha(confArquivo); };
 function mostraAba(nome){
-  const alvos = {macro:'macro', graficos:'aba-graficos', destaques:'destaques', causas:'causas', tipos:'tipos', tabela:'aba-tabela', conf:'conf'};
+  const alvos = {macro:'macro', graficos:'aba-graficos', destaques:'destaques', causas:'causas', tipos:'tipos', revisar:'revisar', tabela:'aba-tabela', conf:'conf'};
   Object.entries(alvos).forEach(([n, id]) => { $(id).hidden = (n !== nome); });
   abaAtual = nome; carregaPendentes(nome);
   document.querySelectorAll('.aba').forEach(b => { const on = b.dataset.aba === nome; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });

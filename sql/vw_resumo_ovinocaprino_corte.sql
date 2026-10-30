@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS public.municipio_regiao (
   cod_ibge text, nome text, nome_norm text, regiao_faec text, regiao_sebrae text, regiao_planejamento text, sindicato text);
 
+DROP VIEW IF EXISTS public.vw_ovino_revisar;
 DROP VIEW IF EXISTS public.vw_ovino_tipo;
 DROP VIEW IF EXISTS public.vw_ovino_despesa_subgrupo;
 DROP VIEW IF EXISTS public.vw_ovino_mensal;
@@ -49,10 +50,18 @@ SELECT w.id_propriedade, w.propriedade, w.tecnico, w.supervisor, w.projeto, w.mu
 FROM public.vw_ovino_mensal w
 JOIN public.resumo_ovino_tipo d ON d.id_propriedade = w.id_propriedade AND d.mes = w.mes;
 
+-- Lançamentos para revisar (aba "Revisar lançamentos"): mesmas colunas de filtro da vw_ovino_mensal.
+-- O cruzamento é por texto porque a tabela pode chegar vazia (sem tipos definidos) quando não há nada a revisar.
+CREATE VIEW public.vw_ovino_revisar AS
+SELECT w.id_propriedade, w.propriedade, w.produtor, w.tecnico, w.supervisor, w.projeto, w.municipio, w.regiao, w.sindicato, w.ativa, w.mes,
+       d.id_visita, d.subgrupo, d.item, d.unidade, d.quantidade, d.valor_unitario, d.valor, d.motivo
+FROM public.vw_ovino_mensal w
+JOIN public.resumo_ovino_revisar d ON d.id_propriedade::text = w.id_propriedade::text AND d.mes::text = w.mes::text;
+
 -- Permissão do usuário só de leitura (se ele já existir) depois que as views são recriadas.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'painel_leitura') THEN
-    GRANT SELECT ON public.vw_ovino_propriedades, public.vw_ovino_mensal, public.vw_ovino_despesa_subgrupo, public.vw_ovino_tipo TO painel_leitura;
+    GRANT SELECT ON public.vw_ovino_propriedades, public.vw_ovino_mensal, public.vw_ovino_despesa_subgrupo, public.vw_ovino_tipo, public.vw_ovino_revisar TO painel_leitura;
   END IF;
 END $$;

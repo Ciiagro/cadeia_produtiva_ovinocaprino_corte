@@ -431,6 +431,7 @@ def causas(supervisor: str | None = None, tecnico: str | None = None, propriedad
 
 
 TIPO = os.environ.get("TIPO_NAME", "public.vw_ovino_tipo")
+REVISAR = os.environ.get("REVISAR_NAME", "public.vw_ovino_revisar")
 
 
 @app.get("/api/tipos")
@@ -463,6 +464,31 @@ def tipos(supervisor: str | None = None, tecnico: str | None = None, propriedade
     return {"de": ms["a"] if ms else None, "ate": ms["b"] if ms else None,
             "receita_bruta": rb, "receita_fora": rf, "despesa_direta": dd, "despesa_outras": od, "despesa_fora": df, "despesa_aleitamento": da,
             "despesa_total": desp_total, "receita_total": rec_total, "margem_bruta": rb["total"] - dd["total"]}
+
+
+@app.get("/api/revisar")
+def revisar(supervisor: str | None = None, tecnico: str | None = None, propriedade: int | None = None,
+            projeto: str | None = None, situacao: str | None = None, municipio: str | None = None, regiao: str | None = None,
+            de: str | None = Query(None, description="YYYY-MM"), ate: str | None = Query(None, description="YYYY-MM")):
+    """Aba 'Revisar lançamentos': lançamentos que parecem errados na origem (ex.: borrego lançado em Venda de Lã), com os filtros do painel."""
+    where, p = _where(supervisor, tecnico, projeto, propriedade, situacao, municipio, regiao)
+    p["de"] = max(de or MES_INICIO, MES_INICIO)
+    where.append("mes >= :de")
+    if ate:
+        where.append("mes <= :ate"); p["ate"] = ate
+    sql = f"""SELECT mes, id_propriedade, propriedade, municipio, tecnico, supervisor, projeto, id_visita, subgrupo, item, unidade,
+                     quantidade, valor_unitario, valor, motivo
+              FROM {REVISAR} WHERE {' AND '.join(where)}
+              ORDER BY supervisor NULLS LAST, tecnico NULLS LAST, mes DESC, id_propriedade"""
+    try:
+        with engine.connect() as con:
+            rows = [dict(r._mapping) for r in con.execute(text(sql), p)]
+    except Exception as e:   # a view ainda não existe no servidor (falta rodar a atualização): aviso, não erro
+        return {"itens": [], "aviso": "Esta lista ainda não existe no servidor. Rode a atualização do painel (atualizar_ovino.bat) para criá-la."}
+    for r in rows:
+        for k in ("quantidade", "valor_unitario", "valor"):
+            r[k] = float(r[k]) if r[k] is not None else None
+    return {"itens": rows}
 
 
 # ----------------------------------------------------------------------------------------------------------------

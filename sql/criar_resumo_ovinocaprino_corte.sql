@@ -286,6 +286,31 @@ SELECT id_propriedade, mes, grupo, classe, subgrupo, ROUND(SUM(valor)::numeric, 
 FROM v GROUP BY 1,2,3,4,5;
 CREATE INDEX ON public.resumo_ovino_tipo (id_propriedade, mes);
 
+-- ---------------------------------------------------------------------
+-- LANÇAMENTOS PARA REVISAR (aba "Revisar lançamentos" do painel): lançamentos que parecem errados na origem (SisATeG).
+-- Regra 1: animal ("Borrego") lançado no subgrupo "Venda de Lã". O correto é Venda de Animal Vivo (ou Abate).
+-- Para acrescentar outra regra: some outro SELECT com UNION ALL, mantendo as mesmas colunas.
+-- Pode ficar vazia (quando não há nada a revisar): o script de cópia aceita.
+DROP TABLE IF EXISTS public.resumo_ovino_revisar;
+CREATE TABLE public.resumo_ovino_revisar AS
+WITH q AS (
+  SELECT id_propriedade, id_visita, id_item, dt_referencia, subgrupo, item, MAX(unidade_medida) AS unidade, SUM(valor) AS qtd
+  FROM tmp_base WHERE grupo = 'Receita' AND tipo_valor = 'QUANTIDADE' GROUP BY 1,2,3,4,5,6
+),
+pr AS (
+  SELECT id_propriedade, id_visita, id_item, dt_referencia, AVG(valor) AS preco
+  FROM tmp_base WHERE grupo = 'Receita' AND tipo_valor = 'VALOR_UNITARIO' GROUP BY 1,2,3,4
+)
+SELECT q.id_propriedade, to_char(date_trunc('month', q.dt_referencia), 'YYYY-MM') AS mes, q.id_visita::text AS id_visita,
+       q.subgrupo, q.item, q.unidade,
+       ROUND(q.qtd::numeric, 2) AS quantidade, ROUND(pr.preco::numeric, 2) AS valor_unitario,
+       ROUND((q.qtd * pr.preco)::numeric, 2) AS valor,
+       'Item de animal lançado em Venda de Lã: mover para Venda de Animal Vivo (ou Abate)' AS motivo
+FROM q JOIN pr USING (id_propriedade, id_visita, id_item, dt_referencia)
+WHERE q.subgrupo ILIKE 'Venda de L_' AND q.item NOT ILIKE 'Venda de L_'
+  AND COALESCE(q.qtd * pr.preco, 0) <> 0;
+CREATE INDEX ON public.resumo_ovino_revisar (id_propriedade, mes);
+
 ANALYZE public.resumo_ovino_propriedades;
 ANALYZE public.resumo_ovino_mensal;
 
