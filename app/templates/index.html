@@ -405,6 +405,16 @@ async function carregaDestaques(q, parcial){
   }
   box.innerHTML = `<h2>Destaques: ${d.mes}${a ? ' comparado a ' + a : ''}</h2><p class="d-resumo">${frase}</p>` + porque + (blocos ? `<div class="d-grid">${blocos}</div>` : '');
 }
+let cargaAba = null, abaAtual = 'graficos';
+function carregaPendentes(nome){
+  if (!cargaAba || !cargaAba.pendentes.has(nome)) return;
+  cargaAba.pendentes.delete(nome);
+  const {q, parcial} = cargaAba;
+  if (nome === 'macro') carregaMacro();
+  else if (nome === 'destaques') carregaDestaques(q, parcial);
+  else if (nome === 'causas') carregaCausas(q);
+  else if (nome === 'tipos') carregaTipos(q);
+}
 async function atualiza(){
   const q = new URLSearchParams({projeto:$('proj').value, supervisor:$('sup').value, tecnico:$('tec').value, propriedade:$('prop').value, municipio:$('mun').value, regiao:$('reg').value, situacao:$('sit').value, de:$('de').value, ate:$('ate').value});
   // título da tela: o recorte escolhido nos filtros
@@ -441,10 +451,10 @@ async function atualiza(){
     cartao('Margem bruta da atividade', brl2(ult.margem_bruta), ult.var_margem_pct, d.map(x=>x.margem_bruta), 'var(--c-mat)', 'barras'),
     cartao('Margem bruta da venda de animais', brl2(ult.margem_leite), ult.var_margem_leite_pct, d.map(x=>x.margem_leite), 'var(--c-mleite)', 'calc')
   ].join('') : '<p>Sem dados para o filtro.</p>';
-  carregaMacro();
-  carregaDestaques(q, parcial);
-  carregaCausas(q);
-  carregaTipos(q);
+  // Abas pesadas (macro, destaques, causas, tipos): só consultam o banco quando a aba está aberta.
+  // As outras ficam pendentes e carregam no primeiro clique, já com os filtros atuais.
+  cargaAba = {q, parcial, pendentes: new Set(['macro', 'destaques', 'causas', 'tipos'])};
+  carregaPendentes(abaAtual);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const soma = f => d.reduce((a,x)=>a+(+x[f]||0),0), media = f => { const v = d.map(x=>x[f]).filter(z=>z!=null); return v.length ? v.reduce((a,z)=>a+z,0)/v.length : null; };
   const setPill = (id, v, moeda, rot, casas) => { const el = $('pl-'+id); if (!el) return; el.innerHTML = `<b>${v==null?'–':(moeda?'R$ ':'')+fmt(v,casas)}</b><small>${rot}</small>`; };
@@ -846,6 +856,7 @@ $('confSit').onchange = () => { if (confArquivo) conferePlanilha(confArquivo); }
 function mostraAba(nome){
   const alvos = {macro:'macro', graficos:'aba-graficos', destaques:'destaques', causas:'causas', tipos:'tipos', tabela:'aba-tabela', conf:'conf'};
   Object.entries(alvos).forEach(([n, id]) => { $(id).hidden = (n !== nome); });
+  abaAtual = nome; carregaPendentes(nome);
   document.querySelectorAll('.aba').forEach(b => { const on = b.dataset.aba === nome; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   if (nome === 'graficos' || nome === 'causas' || nome === 'macro') Object.values(charts).forEach(c => c.resize());
 }

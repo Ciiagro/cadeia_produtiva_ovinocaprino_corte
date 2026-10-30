@@ -2,11 +2,12 @@
 Lê SOMENTE a view do servidor público (nunca o banco local)."""
 import os
 import re
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, text
 
@@ -39,6 +40,33 @@ if not re.fullmatch(r"[A-Za-z0-9_]+\.[A-Za-z0-9_]+", TABLE):
 engine = create_engine(DB_URL, pool_pre_ping=True, pool_size=2, max_overflow=1, pool_recycle=300,
                        connect_args={"connect_timeout": 10})
 app = FastAPI(title="Acompanhamento mensal das cadeias")
+
+# Cache das respostas /api/*: os dados só mudam na atualização diária, então repetir a mesma consulta
+# (trocar de aba, voltar a um filtro, outro usuário abrindo o painel) não precisa ir ao banco de novo.
+# CACHE_TTL em segundos (padrão 300); CACHE_TTL=0 desliga. Vale por instância; na Vercel o s-maxage
+# deixa também a borda guardar a resposta.
+_CACHE_TTL = int(os.environ.get("CACHE_TTL", "300"))
+_CACHE: dict = {}
+
+
+@app.middleware("http")
+async def cache_api(request: Request, call_next):
+    if request.method != "GET" or not request.url.path.startswith("/api/") or _CACHE_TTL <= 0:
+        return await call_next(request)
+    chave = request.url.path + "?" + request.url.query
+    agora = time.time()
+    cab = {"Cache-Control": f"public, max-age=60, s-maxage={_CACHE_TTL}, stale-while-revalidate={_CACHE_TTL * 2}"}
+    hit = _CACHE.get(chave)
+    if hit and agora - hit[0] < _CACHE_TTL:
+        return Response(hit[1], media_type="application/json", headers={**cab, "X-Cache": "HIT"})
+    resp = await call_next(request)
+    if resp.status_code != 200:
+        return resp
+    corpo = b"".join([c async for c in resp.body_iterator])
+    if len(_CACHE) >= 300:   # limite simples para não crescer sem fim
+        _CACHE.clear()
+    _CACHE[chave] = (agora, corpo)
+    return Response(corpo, status_code=200, media_type="application/json", headers={**cab, "X-Cache": "MISS"})
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
@@ -141,9 +169,8 @@ def serie(supervisor: str | None = None, tecnico: str | None = None, propriedade
     with engine.connect() as con:
         rows = [dict(r._mapping) for r in con.execute(text(sql), p)]
         total_props = con.execute(text(f"SELECT COUNT(DISTINCT id_propriedade) FROM {PROPS} WHERE {' AND '.join(wp)}"), pp).scalar()
-    # Preço médio por animal = média dos preços de cada propriedade no mês (venda de animais ÷ animais vendidos)
-    preco_mes = {}
-    with engine.connect() as con:
+        # Preço médio por animal = média dos preços de cada propriedade no mês (venda de animais ÷ animais vendidos)
+        preco_mes = {}
         for r in con.execute(text(f"""SELECT mes, id_propriedade, SUM(venda_animais_rs) AS rs, SUM(animais_vendidos) AS l
                 FROM {TABLE} WHERE {' AND '.join(where)} AND animais_vendidos > 0 GROUP BY mes, id_propriedade"""), p).mappings():
             if r["l"] and float(r["l"]) > 0 and r["rs"] is not None:
@@ -484,19 +511,12 @@ def macro(cadeia: str = "ovino", regiao: str | None = None, situacao: str | None
         except Exception as e:
             con.rollback()
             avisos.append(f"ovino: não consegui ler ({str(e).splitlines()[0][:120]}). Rode a atualização desse painel.")
-        # Visitas e propriedades assistidas (só propriedades de apicultura com lançamento)
+        # Visitas e propriedades assistidas: SÓ do ovinocaprino de corte.
+        # Conta as visitas que geraram lançamento do corte (id_visita da própria base do ovino), sem misturar
+        # visitas de outras atividades da mesma propriedade. Respeita os mesmos filtros de "Com lançamento".
         try:
-            vt = "public.mv_visitas" if con.execute(text("SELECT to_regclass('public.mv_visitas') IS NOT NULL")).scalar() else "public.vw_visitas"
-            vw = ["COALESCE(projeto, '') NOT ILIKE 'TREINAMENTO%'", "mes >= :mi",
-                  f"id_propriedade::text IN (SELECT id_propriedade::text FROM {TABLE} WHERE COALESCE(receita_bruta,0) > 0 OR COALESCE(animais_vendidos,0) > 0)"]
-            vp = {"mi": MES_INICIO}
-            if ate:
-                vw.append("mes <= :ate"); vp["ate"] = ate
-            if regiao:
-                vw.append("regiao_faec = :rg"); vp["rg"] = regiao
-            vg = "municipio" if por_mun else "regiao_faec"
-            for r in con.execute(text(f"""SELECT mes, {vg} AS grupo, COUNT(DISTINCT id_visita) AS vis, COUNT(DISTINCT id_propriedade) AS assist
-                     FROM {vt} WHERE {' AND '.join(vw)} GROUP BY 1, 2"""), vp).mappings():
+            for r in con.execute(text(f"""SELECT mes, {gcol} AS grupo, COUNT(DISTINCT id_visita) AS vis, COUNT(DISTINCT id_propriedade) AS assist
+                     FROM {TABLE} WHERE {wsql} AND mes >= :mi{cate} AND id_visita IS NOT NULL GROUP BY 1, 2"""), pp).mappings():
                 x = g(r["grupo"]); m = r["mes"]; meses_set.add(m)
                 x["vis"][m] = int(r["vis"] or 0); x["assist"][m] = int(r["assist"] or 0)
         except Exception as e:
