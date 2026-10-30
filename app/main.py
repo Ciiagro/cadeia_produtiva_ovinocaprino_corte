@@ -603,10 +603,10 @@ def conferencia(mes: str = Query(..., description="YYYY-MM")):
     tipos, revisar = {}, {}
     try:   # de que tipo é a receita de cada propriedade no mês (para a conferência dizer DO QUE é a diferença)
         with engine.connect() as con:
-            for r in con.execute(text(f"""SELECT id_propriedade::text AS id, subgrupo, SUM(valor) AS v FROM {TIPO}
-                      WHERE mes = :m AND grupo = 'Receita' AND COALESCE(projeto, '') NOT ILIKE 'TREINAMENTO%' GROUP BY 1, 2
+            for r in con.execute(text(f"""SELECT id_propriedade::text AS id, grupo, classe, subgrupo, SUM(valor) AS v FROM {TIPO}
+                      WHERE mes = :m AND COALESCE(projeto, '') NOT ILIKE 'TREINAMENTO%' GROUP BY 1, 2, 3, 4
                       HAVING ABS(COALESCE(SUM(valor), 0)) > 0"""), {"m": mes}).mappings():
-                tipos.setdefault(r["id"], []).append([r["subgrupo"], float(r["v"] or 0)])
+                tipos.setdefault(r["id"], []).append([r["grupo"], r["classe"], r["subgrupo"], float(r["v"] or 0)])
     except Exception:
         tipos = {}
     try:   # lançamentos que parecem errados na origem (aba Revisar lançamentos); se a lista ainda não existe no servidor, ignora
