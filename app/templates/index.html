@@ -95,6 +95,9 @@
   .destaques h2{margin:0 0 6px;font-size:17px;font-weight:700}
   .d-resumo{margin:0 0 12px;font-size:14.5px;line-height:1.55}
   .d-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+  .d-2col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px} .d-2col .d-bloco{margin:0;min-width:0}
+  .d-itens2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:36px}
+  @media(max-width:1000px){.d-2col,.d-itens2{grid-template-columns:1fr}}
   .d-bloco{background:var(--suave);border-radius:10px;padding:10px 12px}
   .d-bloco h3{margin:0 0 6px;font-size:13.5px;font-weight:600}
 .macro-ctl{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 14px}
@@ -598,28 +601,26 @@ async function carregaTipos(q){
   let d = {};
   try { d = await (await fetch('/api/tipos?' + q)).json(); } catch(e) { d = {}; }
   if (!d || !d.de) { box.innerHTML = '<p class="d-vazio">Sem dados para o filtro escolhido.</p>'; return; }
-  // textos curtos; a explicação de cada item fica na dica (ao passar o mouse)
+  // textos curtos e blocos lado a lado; a explicação de cada item fica na dica (ao passar o mouse)
   const kpi = (rot, v, cor, dica) => `<div class="d-item"><span title="${dica || ''}"><b>${rot}</b></span><span class="${cor||''}"><b>${brl2(v)}</b></span></div>`;
-  const tab = (bl, vazio) => bl.itens.length ? `<div class="rolagem" style="max-height:340px"><table class="t-simples"><thead><tr><th>Tipo</th><th class="n">Valor</th><th class="n">%</th></tr></thead><tbody>` +
+  const tab = (bl, vazio) => bl.itens.length ? `<div class="rolagem" style="max-height:280px"><table class="t-simples"><thead><tr><th>Tipo</th><th class="n">Valor</th><th class="n">%</th></tr></thead><tbody>` +
       bl.itens.map(x => `<tr><td>${x.nome}</td><td class="n">${brl2(x.valor)}</td><td class="n">${fmt(x.pct,1)}%</td></tr>`).join('') +
       `<tr><td><b>Total</b></td><td class="n"><b>${brl2(bl.total)}</b></td><td class="n"></td></tr></tbody></table></div>` : `<p class="d-vazio">${vazio || 'Nenhum lançamento.'}</p>`;
-  const tit = (t, dica) => `<h3 class="c-tit" title="${dica}">${t}</h3>`;
+  const bloco = (t, dica, html) => `<div class="d-bloco"><h3 title="${dica}">${t}</h3>${html}</div>`;
   box.innerHTML = `<h2>Receitas e despesas: ${d.de} a ${d.ate}</h2>
-    <div class="d-bloco" style="margin-bottom:14px"><h3>Resumo do período</h3>
+    <div class="d-bloco" style="margin-bottom:14px"><h3>Resumo do período</h3><div class="d-itens2">
       ${kpi('Receita bruta', d.receita_bruta.total, 'pos', 'Venda de animais, esterco, pele, lã e outras receitas, sem empréstimo nem investimento')}
       ${kpi('Despesa direta', d.despesa_direta.total, 'neg', 'Despesas que entram no cálculo da margem bruta')}
+      ${kpi('Margem bruta', d.margem_bruta, d.margem_bruta >= 0 ? 'pos' : 'neg', 'Receita bruta menos despesa direta')}
       ${kpi('Outras despesas', d.despesa_outras.total, '', 'Mão de obra familiar, formação de forrageiras e compra de animal lançada como investimento')}
+      ${kpi('Total de receitas', d.receita_total, '', 'Receita bruta + venda para abate, venda de bem e recebimento de empréstimo')}
       ${kpi('Investimento e empréstimo', d.despesa_fora.total, '', 'Aquisição de bem e pagamento de empréstimo')}
       ${kpi('Total de despesas', d.despesa_total, 'neg', 'Direta + outras + investimento e empréstimo (como o Total Despesas do SisATeG)')}
       ${kpi('Aleitamento e compra de animais', d.despesa_aleitamento.total, '', 'Fora do total de despesas, só informativo (a planilha do SisATeG também não soma)')}
-      ${kpi('Total de receitas', d.receita_total, '', 'Receita bruta + venda para abate, venda de bem e recebimento de empréstimo')}
-      ${kpi('Margem bruta', d.margem_bruta, d.margem_bruta >= 0 ? 'pos' : 'neg', 'Receita bruta menos despesa direta')}
-    </div>
-    ${tit('Receita bruta', 'Venda de animais, esterco, pele, lã e outras, sem empréstimo nem investimento')}${tab(d.receita_bruta)}
-    ${tit('Despesa direta', 'As despesas que entram no cálculo da margem bruta')}${tab(d.despesa_direta)}
-    ${tit('Outras despesas', 'Mão de obra familiar, formação de forrageiras e compra de animal como investimento. Não entram na despesa direta')}${tab(d.despesa_outras)}
-    ${tit('Aleitamento e compra de animais', 'Gasto real, mas fora do total de despesas para o painel bater com a planilha do SisATeG')}${tab(d.despesa_aleitamento, 'Sem aleitamento nem compra de animais no período.')}
-    <div class="d-grid"><div class="d-bloco"><h3 title="Não entram na despesa direta, mas somam no total de despesas">Investimento e empréstimo</h3>${tab(d.despesa_fora)}</div><div class="d-bloco"><h3 title="Venda para abate, venda de bem e recebimento de empréstimo">Receitas fora da receita bruta</h3>${tab(d.receita_fora)}</div></div>`;
+    </div></div>
+    <div class="d-2col">${bloco('Receita bruta', 'Venda de animais, esterco, pele, lã e outras, sem empréstimo nem investimento', tab(d.receita_bruta))}${bloco('Despesa direta', 'As despesas que entram no cálculo da margem bruta', tab(d.despesa_direta))}</div>
+    <div class="d-2col">${bloco('Outras despesas', 'Mão de obra familiar, formação de forrageiras e compra de animal como investimento. Não entram na despesa direta', tab(d.despesa_outras))}${bloco('Aleitamento e compra de animais', 'Gasto real, mas fora do total de despesas para o painel bater com a planilha do SisATeG', tab(d.despesa_aleitamento, 'Sem aleitamento nem compra de animais no período.'))}</div>
+    <div class="d-2col">${bloco('Investimento e empréstimo', 'Não entram na despesa direta, mas somam no total de despesas', tab(d.despesa_fora))}${bloco('Receitas fora da receita bruta', 'Venda para abate, venda de bem e recebimento de empréstimo', tab(d.receita_fora))}</div>`;
 }
 // ---- Aba "Revisar lançamentos": lançamentos que parecem errados na origem (SisATeG), com os filtros do painel; baixa em Excel
 let revisarAtual = [];
