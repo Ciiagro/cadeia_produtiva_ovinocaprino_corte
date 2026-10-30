@@ -600,6 +600,21 @@ def conferencia(mes: str = Query(..., description="YYYY-MM")):
                       WHERE mes = :m AND classe = 'Fora da receita bruta' AND subgrupo NOT ILIKE 'Venda de Animal Abate%' AND COALESCE(projeto, '') NOT ILIKE 'TREINAMENTO%' GROUP BY 1"""), {"m": mes}).mappings()}
     except Exception:
         fora = {}
+    tipos, revisar = {}, {}
+    try:   # de que tipo é a receita de cada propriedade no mês (para a conferência dizer DO QUE é a diferença)
+        with engine.connect() as con:
+            for r in con.execute(text(f"""SELECT id_propriedade::text AS id, subgrupo, SUM(valor) AS v FROM {TIPO}
+                      WHERE mes = :m AND grupo = 'Receita' AND COALESCE(projeto, '') NOT ILIKE 'TREINAMENTO%' GROUP BY 1, 2
+                      HAVING ABS(COALESCE(SUM(valor), 0)) > 0"""), {"m": mes}).mappings():
+                tipos.setdefault(r["id"], []).append([r["subgrupo"], float(r["v"] or 0)])
+    except Exception:
+        tipos = {}
+    try:   # lançamentos que parecem errados na origem (aba Revisar lançamentos); se a lista ainda não existe no servidor, ignora
+        with engine.connect() as con:
+            for r in con.execute(text(f"SELECT id_propriedade::text AS id, item, subgrupo, valor FROM {REVISAR} WHERE mes = :m"), {"m": mes}).mappings():
+                revisar.setdefault(r["id"], []).append({"item": r["item"], "subgrupo": r["subgrupo"], "valor": float(r["valor"] or 0)})
+    except Exception:
+        revisar = {}
     rows = None
     for cv, cf in ((True, True), (True, False), (False, False)):   # servidor ainda sem mao_obra_familiar / id_visita: rode o atualizar_ovino.bat
         try:
@@ -608,7 +623,7 @@ def conferencia(mes: str = Query(..., description="YYYY-MM")):
             erro = str(e).splitlines()[0][:300]
     if rows is None:
         return {"erro": erro}
-    return {"mes": mes, "com_visita": com_visita, "treino": treino,
+    return {"mes": mes, "com_visita": com_visita, "treino": treino, "tipos": tipos, "revisar": revisar,
             "itens": [{"id": r["id"], "id_visita": r["id_visita"], "propriedade": r["propriedade"], "municipio": r["municipio"], "projeto": r["projeto"], "ativa": bool(r["ativa"]), "rec_fora": fora.get(r["id"], 0.0),
                        "rec": float(r["rec"] or 0), "desp": float(r["desp"] or 0), "fam": float(r["fam"] or 0), "prod": float(r["prod"] or 0)} for r in rows]}
 
