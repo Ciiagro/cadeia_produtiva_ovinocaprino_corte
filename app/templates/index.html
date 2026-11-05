@@ -258,14 +258,15 @@
   <section class="destaques" id="tipos" hidden></section>
   <section class="destaques" id="revisar" hidden></section>
   <div class="graficos" id="aba-graficos">
-    <section class="graf" style="--cor:var(--c-receita)"><div class="g-topo"><span class="ico g" data-ico="moedas"></span><div class="g-tit"><h2>Receita bruta (R$)</h2><p class="formula">Tudo que entrou na atividade, sem empréstimo nem investimento</p></div><div class="pill" id="pl-c1"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c1"></canvas></div></section>
-    <section class="graf" style="--cor:var(--c-desp)"><div class="g-topo"><span class="ico g" data-ico="calc"></span><div class="g-tit"><h2>Despesa direta (R$)</h2><p class="formula">Gastos diretos da atividade, sem empréstimo, investimento, aleitamento e mão de obra familiar</p></div><div class="pill" id="pl-c7"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c7"></canvas></div></section>
-    <section class="graf" style="--cor:var(--c-venda)"><div class="g-topo"><span class="ico g" data-ico="garrafa"></span><div class="g-tit"><h2>Venda de animais (R$)</h2><p class="formula">Animais vivos + animais para abate</p></div><div class="pill" id="pl-c6"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c6"></canvas></div></section>
-    <section class="graf" style="--cor:var(--c-venda)"><div class="g-topo"><span class="ico g" data-ico="garrafa"></span><div class="g-tit"><h2>Preço médio por animal vendido (R$)</h2><p class="formula">Média dos preços das propriedades: venda de animais ÷ animais vendidos</p></div><div class="pill" id="pl-c8"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c8"></canvas></div></section>
-    <section class="graf" style="--cor:var(--c-prod)"><div class="g-topo"><span class="ico g" data-ico="gota"></span><div class="g-tit"><h2>Animais vendidos (cabeças)</h2><p class="formula">Vivos + abate</p></div><div class="pill" id="pl-c2"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c2"></canvas></div></section>
+    <section class="graf" style="--cor:var(--c-receita)"><div class="g-topo"><span class="ico g" data-ico="moedas"></span><div class="g-tit"><h2>Renda Bruta da Atividade (R$)</h2><p class="formula">Tudo que entrou na atividade, sem empréstimo nem investimento</p></div><div class="pill" id="pl-c1"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c1"></canvas></div></section>
+    <section class="graf" style="--cor:var(--c-desp)"><div class="g-topo"><span class="ico g" data-ico="calc"></span><div class="g-tit"><h2>COE da Atividade (R$)</h2><p class="formula">Custo Operacional Efetivo: gastos diretos da atividade, sem empréstimo, investimento, aleitamento e mão de obra familiar</p></div><div class="pill" id="pl-c7"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c7"></canvas></div></section>
     <section class="graf" style="--cor:var(--c-mat)"><div class="g-topo"><span class="ico g" data-ico="barras"></span><div class="g-tit"><h2>Margem bruta da atividade (R$)</h2><p class="formula">Receita bruta &minus; despesa direta</p></div><div class="pill" id="pl-c3"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c3"></canvas></div></section>
+    <section class="graf" style="--cor:var(--c-venda)"><div class="g-topo"><span class="ico g" data-ico="garrafa"></span><div class="g-tit"><h2>Renda Bruta da Venda de Animais (R$)</h2><p class="formula">Animais vivos + animais para abate</p></div><div class="pill" id="pl-c6"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c6"></canvas></div></section>
+    <section class="graf" style="--cor:var(--c-desp)"><div class="g-topo"><span class="ico g" data-ico="calc"></span><div class="g-tit"><h2>COE da Atividade / Animal vendido (R$/animal)</h2><p class="formula">COE &divide; animais vendidos no mês</p></div><div class="pill" id="pl-c11"><b>–</b><small>Média no período</small></div></div><div class="cv"><canvas id="c11"></canvas></div></section>
     <section class="graf" style="--cor:var(--c-mleite)"><div class="g-topo"><span class="ico g" data-ico="calc"></span><div class="g-tit"><h2>Margem bruta da venda de animais (R$)</h2><p class="formula">Venda de animais &minus; despesa direta</p></div><div class="pill" id="pl-c4"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c4"></canvas></div></section>
+    <section class="graf" style="--cor:var(--c-prod)"><div class="g-topo"><span class="ico g" data-ico="gota"></span><div class="g-tit"><h2>Animais vendidos (cabeças)</h2><p class="formula">Vivos + abate</p></div><div class="pill" id="pl-c2"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c2"></canvas></div></section>
     <section class="graf" style="--cor:var(--c-media)"><div class="g-topo"><span class="ico g" data-ico="pessoas"></span><div class="g-tit"><h2>Animais vendidos por produtor (cabeças)</h2><p class="formula">Animais vendidos ÷ produtores com lançamento no mês</p></div><div class="pill" id="pl-c5"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c5"></canvas></div></section>
+    <section class="graf" style="--cor:var(--c-venda)"><div class="g-topo"><span class="ico g" data-ico="garrafa"></span><div class="g-tit"><h2>Preço médio por animal vendido (R$)</h2><p class="formula">Média dos preços das propriedades: venda de animais ÷ animais vendidos</p></div><div class="pill" id="pl-c8"><b>–</b><small>Total no período</small></div></div><div class="cv"><canvas id="c8"></canvas></div></section>
   </div>
   <section class="detalhe" id="aba-tabela" hidden><div class="d-topo"><h2>Detalhe mensal</h2><span class="xls-msg" id="xlsMsg"></span><button class="btn sec" id="btnXls" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>Baixar Excel</button></div><div class="rolagem"><table id="tab"></table></div></section>
 </div>
@@ -355,7 +356,7 @@ function desenha(id, rotulos, valores, cor, casas, moeda, parcial, aceitaNegativ
     options:{casas, moedaTxt:moeda, responsive:true, maintainAspectRatio:false, animation: reduz ? false : undefined,
       interaction:{mode:'index', intersect:false},
       layout:{padding:{top:38, right:14, left:4}},
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label: c => moeda ? 'R$ ' + fmt(c.parsed.y, casas) + (id === 'c8' ? ' por animal' : '') : fmt(c.parsed.y, casas) + ' animais'}}},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label: c => moeda ? 'R$ ' + fmt(c.parsed.y, casas) + (id === 'c8' || id === 'c11' ? ' por animal' : '') : fmt(c.parsed.y, casas) + ' animais'}}},
       scales:{
         x:{grid:{display:false}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit:12,
            callback(val){ const l = this.getLabelForValue(val); return l.slice(5) + '/' + l.slice(2,4); }}},
@@ -492,6 +493,7 @@ async function atualiza(){
   setPill('c7', soma('despesa_direta'), true, 'Total no período', 2);
   setPill('c6', soma('venda_leite'), true, 'Total no período', 2);
   setPill('c8', media('preco_medio'), true, 'Média no período', 2);
+  { const sp = soma('producao'); setPill('c11', sp ? soma('despesa_direta')/sp : null, true, 'Média no período', 2); }
   setPill('c2', soma('producao'), false, 'Total no período', 0);
   setPill('c3', soma('margem_bruta'), true, 'Total no período', 2);
   setPill('c4', soma('margem_leite'), true, 'Total no período', 2);
@@ -500,6 +502,7 @@ async function atualiza(){
   desenha('c6', m, d.map(x=>x.venda_leite), css('--c-venda'), 2, true, parcial);
   desenha('c7', m, d.map(x=>x.despesa_direta), css('--c-desp'), 2, true, parcial);
   desenha('c8', m, d.map(x=>x.preco_medio), css('--c-venda'), 2, true, parcial);
+  desenha('c11', m, d.map(x=>(+x.producao > 0 ? x.despesa_direta/x.producao : null)), css('--c-desp'), 2, true, parcial);
   desenha('c3', m, d.map(x=>x.margem_bruta), css('--c-mat'), 2, true, parcial, true);
   desenha('c4', m, d.map(x=>x.margem_leite), css('--c-mleite'), 2, true, parcial, true);
   desenha('c2', m, d.map(x=>x.producao), css('--c-prod'), 0, false, parcial);
