@@ -124,6 +124,9 @@ WHERE r.atividade = 'OVINOCAPRINOCULTURA DE CORTE' AND r.status_item = 'ATIVO' A
   AND EXISTS (SELECT 1 FROM tmp_base q WHERE q.id_visita = r.id_visita AND q.id_item = r.id_item AND q.dt_referencia = r.dt_referencia AND q.tipo_valor = 'QUANTIDADE')
   AND NOT EXISTS (SELECT 1 FROM tmp_base p WHERE p.id_visita = r.id_visita AND p.id_item = r.id_item AND p.dt_referencia = r.dt_referencia AND p.tipo_valor = 'VALOR_UNITARIO');
 UPDATE tmp_base SET tipo_registro = 'PRINCIPAL' WHERE tipo_registro = 'DETALHADO';   -- (só as linhas de preço acrescentadas acima eram detalhadas)
+-- guarda a data ORIGINAL do lançamento (para avisar na aba Revisar quando ela cai em mês diferente da visita)
+ALTER TABLE tmp_base ADD COLUMN dt_original date;
+UPDATE tmp_base SET dt_original = dt_referencia::date;
 -- O mês de cada visita é o da REFERÊNCIA DA VISITA (é assim que a planilha do SisATeG conta); a data do item só vale se a visita não tiver referência
 UPDATE tmp_base b SET dt_referencia = to_date(lv.referencia_visita || '-01', 'YYYY-MM-DD')
 FROM public.sisateg_rel_listar_visita lv
@@ -308,6 +311,23 @@ SELECT q.id_propriedade, to_char(date_trunc('month', q.dt_referencia), 'YYYY-MM'
        'Item de animal lançado em Venda de Lã: mover para Venda de Animal Vivo (ou Abate)' AS motivo
 FROM q JOIN pr USING (id_propriedade, id_visita, id_item, dt_referencia)
 WHERE q.subgrupo ILIKE 'Venda de L_' AND q.item NOT ILIKE 'Venda de L_'
+  AND COALESCE(q.qtd * pr.preco, 0) <> 0;
+-- Lançamento com DATA em mês POSTERIOR ao da visita (ex.: visita de agosto, item datado 01/10): a planilha do SisATeG o conta no mês da data, o painel no da visita
+INSERT INTO public.resumo_ovino_revisar (id_propriedade, mes, id_visita, subgrupo, item, unidade, quantidade, valor_unitario, valor, motivo)
+WITH q AS (
+  SELECT id_propriedade, id_visita, id_item, dt_referencia, dt_original, subgrupo, item, MAX(unidade_medida) AS unidade, SUM(valor) AS qtd
+  FROM tmp_base WHERE tipo_valor = 'QUANTIDADE' GROUP BY 1,2,3,4,5,6,7
+),
+pr AS (
+  SELECT id_propriedade, id_visita, id_item, dt_referencia, dt_original, AVG(valor) AS preco
+  FROM tmp_base WHERE tipo_valor = 'VALOR_UNITARIO' GROUP BY 1,2,3,4,5
+)
+SELECT q.id_propriedade, to_char(date_trunc('month', q.dt_referencia), 'YYYY-MM'), q.id_visita::text,
+       q.subgrupo, q.item, q.unidade,
+       ROUND(q.qtd::numeric, 2), ROUND(pr.preco::numeric, 2), ROUND((q.qtd * pr.preco)::numeric, 2),
+       'Lançado com data ' || to_char(q.dt_original, 'DD/MM/YYYY') || ', mas a visita é de ' || to_char(q.dt_referencia, 'MM/YYYY') || ': corrigir a data do lançamento'
+FROM q JOIN pr USING (id_propriedade, id_visita, id_item, dt_referencia, dt_original)
+WHERE to_char(q.dt_original, 'YYYY-MM') > to_char(q.dt_referencia, 'YYYY-MM')
   AND COALESCE(q.qtd * pr.preco, 0) <> 0;
 CREATE INDEX ON public.resumo_ovino_revisar (id_propriedade, mes);
 

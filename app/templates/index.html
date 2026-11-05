@@ -951,7 +951,7 @@ async function conferePlanilha(file){
       if (Math.abs(x.dr) > 1) partes.push('Receita no painel: ' + linhaTipo(L, 'Receita'));
       if (Math.abs(x.dd) > 1) partes.push('Despesa no painel: ' + linhaTipo(L, 'Despesa'));
       if (temProd && Math.abs(x.dp) > 1) partes.push(`Animais: painel ${nf.format(Math.round(p.prod))} x planilha ${nf.format(Math.round(x.a.prod))}`);
-      (revD[p.id] || []).forEach(r => partes.push(`⚠ ${r.item} lançado em "${r.subgrupo}" (${R(r.valor)}): ver aba Revisar lançamentos`));
+      (revD[p.id] || []).forEach(r => partes.push(/^Lançado com data/.test(r.motivo || '') ? `⚠ ${r.item} (${R(r.valor)}): ${r.motivo}` : `⚠ ${r.item} lançado em "${r.subgrupo}" (${R(r.valor)}): ver aba Revisar lançamentos`));
       return partes.join(' | ');
     };
     const tabDif = dif.length ? `<div class="rolagem" style="max-height:460px"><table class="t-simples"><thead><tr><th>${temVis ? 'ID Visita' : 'ID Propriedade'}</th><th>Propriedade</th><th>Município</th><th>Técnico</th><th class="n">Receita planilha</th><th class="n" title="receita bruta + venda de bem e recebimento de empréstimo (o SisATeG soma tudo em Receitas)">Receita painel</th><th class="n">Δ receita</th><th class="n">Despesa planilha</th><th class="n">Despesa painel</th><th class="n">Δ despesa</th><th class="n">Δ animais</th><th title="De que é a diferença: o que o painel tem lançado nesta propriedade no mês">De que é a diferença</th></tr></thead><tbody>` +

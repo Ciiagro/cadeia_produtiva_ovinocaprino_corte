@@ -611,8 +611,8 @@ def conferencia(mes: str = Query(..., description="YYYY-MM")):
         tipos = {}
     try:   # lançamentos que parecem errados na origem (aba Revisar lançamentos); se a lista ainda não existe no servidor, ignora
         with engine.connect() as con:
-            for r in con.execute(text(f"SELECT id_propriedade::text AS id, item, subgrupo, valor FROM {REVISAR} WHERE mes = :m"), {"m": mes}).mappings():
-                revisar.setdefault(r["id"], []).append({"item": r["item"], "subgrupo": r["subgrupo"], "valor": float(r["valor"] or 0)})
+            for r in con.execute(text(f"SELECT id_propriedade::text AS id, item, subgrupo, valor, motivo FROM {REVISAR} WHERE mes = :m"), {"m": mes}).mappings():
+                revisar.setdefault(r["id"], []).append({"item": r["item"], "subgrupo": r["subgrupo"], "valor": float(r["valor"] or 0), "motivo": r["motivo"]})
     except Exception:
         revisar = {}
     rows = None
