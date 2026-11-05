@@ -15,7 +15,7 @@ Por isso, se você acabou de atualizar a bovinocultura (ou a apicultura), **não
 | Atualizar sozinho (baixa do SisATeG) | `python scripts/atualizar_tudo.py --rapido` | `atualizar_ovino.bat` | poucos minutos |
 | Toda semana (olha 120 dias) | `python scripts/atualizar_tudo.py` | `atualizar_ovino_completo.bat` | mais demorado |
 | **1ª vez com o SQL novo, ou mudou o SQL** | `python scripts/atualizar_tudo.py --so-resumo --completo` | `atualizar_so_resumo_completo.bat` | só refaz o resumo |
-| Recarregar a história | `python scripts/atualizar_tudo.py --desde 2024-06-01` | `atualizar_historia_completa.bat` | 15 a 20 min |
+| Recarregar a história | `python scripts/atualizar_tudo.py --desde 2023-01-01` | `atualizar_historia_completa.bat` | 15 a 20 min |
 
 ## Primeira vez com esta versão
 1. `python scripts/atualizar_tudo.py --so-resumo --completo`

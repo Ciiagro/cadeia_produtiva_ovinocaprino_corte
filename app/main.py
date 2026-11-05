@@ -32,7 +32,7 @@ def _db_url():
 DB_URL = _db_url()
 TABLE = os.environ.get("TABLE_NAME", "public.vw_ovino_mensal")
 PROPS = os.environ.get("PROPS_NAME", "public.vw_ovino_propriedades")
-MES_INICIO = os.environ.get("MES_INICIO", "2024-06")  # início da base completa (YYYY-MM)
+MES_INICIO = os.environ.get("MES_INICIO", "2023-01")  # início da base completa (YYYY-MM)
 if not re.fullmatch(r"[A-Za-z0-9_]+\.[A-Za-z0-9_]+", TABLE):
     raise RuntimeError("TABLE_NAME inválido (use schema.nome)")
 
@@ -582,7 +582,7 @@ def conferencia(mes: str = Query(..., description="YYYY-MM")):
         vis = "MAX(id_visita) AS id_visita," if com_visita else "NULL AS id_visita,"
         fam = "SUM(mao_obra_familiar)" if com_fam else "0"
         with engine.connect() as con:
-            return con.execute(text(f"""SELECT id_propriedade::text AS id, {vis} MAX(propriedade) AS propriedade, MAX(municipio) AS municipio, MAX(projeto) AS projeto, BOOL_OR(COALESCE(ativa, FALSE)) AS ativa,
+            return con.execute(text(f"""SELECT id_propriedade::text AS id, {vis} MAX(propriedade) AS propriedade, MAX(municipio) AS municipio, MAX(tecnico) AS tecnico, MAX(projeto) AS projeto, BOOL_OR(COALESCE(ativa, FALSE)) AS ativa,
                        SUM(receita_bruta) AS rec, SUM(despesa_direta) AS desp, {fam} AS fam, SUM(animais_vendidos) AS prod
                      FROM {TABLE} WHERE mes = :m AND COALESCE(projeto, '') NOT ILIKE 'TREINAMENTO%'
                      GROUP BY id_propriedade"""), {"m": mes}).mappings().all()
@@ -624,7 +624,7 @@ def conferencia(mes: str = Query(..., description="YYYY-MM")):
     if rows is None:
         return {"erro": erro}
     return {"mes": mes, "com_visita": com_visita, "treino": treino, "tipos": tipos, "revisar": revisar,
-            "itens": [{"id": r["id"], "id_visita": r["id_visita"], "propriedade": r["propriedade"], "municipio": r["municipio"], "projeto": r["projeto"], "ativa": bool(r["ativa"]), "rec_fora": fora.get(r["id"], 0.0),
+            "itens": [{"id": r["id"], "id_visita": r["id_visita"], "propriedade": r["propriedade"], "municipio": r["municipio"], "tecnico": r["tecnico"], "projeto": r["projeto"], "ativa": bool(r["ativa"]), "rec_fora": fora.get(r["id"], 0.0),
                        "rec": float(r["rec"] or 0), "desp": float(r["desp"] or 0), "fam": float(r["fam"] or 0), "prod": float(r["prod"] or 0)} for r in rows]}
 
 
