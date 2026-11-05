@@ -128,7 +128,7 @@ UPDATE tmp_base SET tipo_registro = 'PRINCIPAL' WHERE tipo_registro = 'DETALHADO
 UPDATE tmp_base b SET dt_referencia = to_date(lv.referencia_visita || '-01', 'YYYY-MM-DD')
 FROM public.sisateg_rel_listar_visita lv
 WHERE lv.id_visita::text = b.id_visita::text AND lv.referencia_visita ~ '^[0-9]{4}-[0-9]{2}$'
-  AND ABS(to_date(lv.referencia_visita || '-01', 'YYYY-MM-DD') - b.dt_referencia::date) <= 366;   -- referência muito distante da data do item (ex.: visita antiga editada depois) é ignorada
+  AND (to_date(lv.referencia_visita || '-01', 'YYYY-MM-DD') - b.dt_referencia::date) >= -366;   -- vale a referência da visita, mesmo que os itens tenham data bem mais antiga (item copiado de visita antiga); só ignora referência MUITO ANTERIOR aos itens
 -- Visita SEM referência válida: o mês dela passa a ser o mais recente entre os itens dela
 UPDATE tmp_base b SET dt_referencia = m.mx
 FROM (SELECT b2.id_visita, MAX(b2.dt_referencia) AS mx
